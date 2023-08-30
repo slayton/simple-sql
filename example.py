@@ -19,7 +19,10 @@ creds = DbConfig(
 
 
 SQL = connect(creds)
-result = SQL.query("SELECT * FROM data where id=%(id)s").bind({"id": 2}).get_result(Data)
+result = SQL.query("SELECT * FROM data where id=%(id)s").bind({"id": 2}).get_single(Data)
 
+id_tuple = ((1,2,),)
+SQL = connect(creds) #Creds is an instance of models. dbconfig
+result = SQL.query("SELECT * FROM data where id in %s").bind(id_tuple).get_list(Data)
 print(result)
 

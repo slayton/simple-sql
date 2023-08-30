@@ -23,13 +23,13 @@ class SQL:
         self.args = args
         return self
 
-    def get_result(self, model_type: Type[BaseModel]) -> BaseModel:
+    def get_single(self, model_type: Type[BaseModel]) -> BaseModel:
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(self.query_string, self.args)
             result = cursor.fetchone()
             return model_type.model_validate(result)
 
-    def get_result_list(self, model_type: Type[BaseModel]) -> list[BaseModel]:
+    def get_list(self, model_type: Type[BaseModel]) -> list[BaseModel]:
 
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(self.query_string, self.args)

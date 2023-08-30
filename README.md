@@ -9,15 +9,18 @@ boiler plate code you need with psycopg2.
 ## Examples:
 See `examples.py`
 
+These examples assume you have Postgres running somewhere. Connection information about that database is defined in an
+instance of DbConfig and you have a Pydantic model you want to deserialize into:
+
 Query a single row by id:
 ```python
-SQL = connect(config) #Creds is an instance of models. dbconfig
-result = SQL.query("SELECT * FROM data where id=%(id)s").bind({"id": 2}).get_result(Data) #Data is a pydantic model
+SQL = connect(config)
+result = SQL.query("SELECT * FROM data where id=%(id)s").bind({"id": 2}).get_single(PydanticModel)
 ```
 
 Query within a collection of ids:
 ```python
-id_tuple = (1,2,3)
+id_tuple = ((1,2,3), )
 SQL = connect(config) #Creds is an instance of models. dbconfig
-result = SQL.query("SELECT * FROM data where id=%(id)s").bind({"id": 2}).get_result(Data) #Data is a pydantic model
+result = SQL.query("SELECT * FROM data where id=%s").bind(id_tuple).get_list(PydanticModel) 
 ```
