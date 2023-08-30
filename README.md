@@ -24,3 +24,6 @@ id_tuple = ((1,2,3), )
 SQL = connect(config) #Creds is an instance of models. dbconfig
 result = SQL.query("SELECT * FROM data where id=%s").bind(id_tuple).get_list(PydanticModel) 
 ```
+
+## Transaction Support
+All queries are contained in their own transaction. Transactional support across multiple queries is a WIP
