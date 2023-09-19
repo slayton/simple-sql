@@ -1,7 +1,9 @@
-from typing import Union
+from enum import IntEnum
+from typing import Type, List, Union
 
 import psycopg2
 from psycopg2.extras import RealDictCursor, DictCursor
+
 from pydantic import BaseModel, TypeAdapter
 
 _primitive_types = [int, float, str, bool]
@@ -90,12 +92,6 @@ class SQL:
             if model_type is None:
                 return
             return _parse_result(cursor, model_type, as_list)
-
-    def get_raw(self) -> int:
-        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(self.query_string, self.args)
-            self.connection.commit()
-            return cursor.fetchone()
 
 
 def sql_connect(credentials: DbConfig) -> SQL:
