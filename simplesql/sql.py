@@ -31,22 +31,22 @@ class DbConfig(BaseModel):
 
 
 def _parse_result(cursor, result_type: _accepted_types, as_list: bool) -> _return_types:
-    if result_type in _primitive_types:
+    if isinstance(result_type, type):
         return _parse_primitive(cursor, result_type, as_list)
     else:
         return _parse_pydantic(cursor, result_type, as_list)
 
 
-def _parse_primitive(cursor, result_type: _accepted_types, as_list: bool) -> _return_types:
+def _parse_primitive(cursor, expected_type: type, as_list: bool) -> _return_types:
 
     if as_list:
         result = cursor.fetchall()
-        return [result_type(row[0]) for row in result]
+        return [expected_type(row[0]) for row in result]
     else:
         if cursor.rowcount == 0:
             return None
         result = cursor.fetchone()
-        return result_type(result[0])
+        return expected_type(result[0])
 
 
 def _parse_pydantic(cursor, result_type: _accepted_types, as_list: bool) -> _return_types:
