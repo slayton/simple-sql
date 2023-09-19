@@ -1,83 +1,106 @@
-from enum import IntEnum
-from typing import Type
+from typing import Union
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import RealDictCursor, DictCursor
+from pydantic import BaseModel, TypeAdapter
 
-from pydantic import BaseModel
+_primitive_types = [int, float, str, bool]
+_accepted_types = Union[int, float, str, bool, BaseModel]
+_return_types = Union[
+    None,
+    int,
+    float,
+    str,
+    bool,
+    BaseModel,
+    list[int],
+    list[float],
+    list[str],
+    list[bool],
+    list[BaseModel],
+]
 
-from models.dbconfig import DbConfig
 
-class QueryType(IntEnum):
-    undefined = 0
-    select = 1
-    insert = 2
-    delete = 3
-    update = 4
-    truncate = 5
+class DbConfig(BaseModel):
+    hostname: str
+    database: str
+    port: int = 5432
+    username: str
+    password: str
+    log_queries: bool = False
+
+
+def _parse_result(cursor, result_type: _accepted_types, as_list: bool) -> _return_types:
+    if result_type in _primitive_types:
+        return _parse_primitive(cursor, result_type, as_list)
+    else:
+        return _parse_pydantic(cursor, result_type, as_list)
+
+
+def _parse_primitive(cursor, result_type: _accepted_types, as_list: bool) -> _return_types:
+
+    if as_list:
+        result = cursor.fetchall()
+        return [result_type(row[0]) for row in result]
+    else:
+        if cursor.rowcount == 0:
+            return None
+        result = cursor.fetchone()
+        return result_type(result[0])
+
+
+def _parse_pydantic(cursor, result_type: _accepted_types, as_list: bool) -> _return_types:
+    if as_list:
+        if cursor.rowcount == 0:
+            return []
+        result = cursor.fetchall()
+        return TypeAdapter(list[result_type]).validate_python(result)
+    else:
+        if cursor.rowcount == 0:
+            return None
+        result = cursor.fetchone()
+        return result_type.model_validate(result)
+
 
 class SQL:
-
-    _COMMIT_TYPES = {QueryType.delete, QueryType.insert, QueryType.update}
     def __init__(self, connection, verbose: bool = False):
         self.connection = connection
         self.verbose = verbose
         self.query_string: str = ""
         self.args: tuple = tuple()
-        self.query_type = QueryType.select
 
     def query(self, query: str):
         self.query_string = query
-        if self.query_string.startswith("SELECT"):
-            self.query_type = QueryType.select
-        elif self.query_string.startswith("INSERT INTO"):
-            self.query_type = QueryType.insert
-        elif self.query_string.startswith("DELETE FROM"):
-            self.query_string = QueryType.delete
-        elif self.query_string.startswith("UPDATE"):
-            self.query_type = QueryType.update
-
         return self
 
     def bind(self, args):
-        self.args = args
+        if isinstance(args, BaseModel):
+            self.args = args.model_dump()
+        else:
+            self.args = args
         return self
 
-    def commit(self):
+    def run_query(
+        self, model_type: _accepted_types = None, as_list: bool = False
+    ) -> _return_types:
+        cf = DictCursor if model_type in _primitive_types else RealDictCursor
+        with self.connection.cursor(cursor_factory=cf) as cursor:
+            cursor.execute(self.query_string, self.args)
+            self.connection.commit()
+            if model_type is None:
+                return
+            return _parse_result(cursor, model_type, as_list)
+
+    def get_raw(self) -> int:
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(self.query_string, self.args)
             self.connection.commit()
-
-    def get(self, model_type: Type[BaseModel]) -> BaseModel:
-        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(self.query_string, self.args)
-            if self.query_type in self._COMMIT_TYPES:
-                self.connection.commit()
-            result = cursor.fetchone()
-            return model_type.model_validate(result)
-
-    def get_list(self, model_type: Type[BaseModel]) -> list[BaseModel]:
-        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(self.query_string, self.args)
-            if self.query_type in self._COMMIT_TYPES:
-                self.connection.commit()
-            results = cursor.fetchall()
-            return [model_type.model_validate(row) for row in results]
-
-    def get_int(self) -> int:
-        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(self.query_string, self.args)
-            if self.query_type in self._COMMIT_TYPES:
-                self.connection.commit()
             return cursor.fetchone()
 
 
-
-
 def sql_connect(credentials: DbConfig) -> SQL:
-    conn_str = "dbname='{database}' user='{username}' host='{hostname}' password='{password}'".format_map(credentials.model_dump())
+    conn_str = "dbname='{database}' user='{username}' host='{hostname}' password='{password}'".format_map(
+        credentials.model_dump()
+    )
     connection = psycopg2.connect(conn_str)
     return SQL(connection, verbose=credentials.log_queries)
-
-
-

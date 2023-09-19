@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from dbconfig import DbConfig
-from simplesql.sql import sql_connect
+from simplesql.sql import sql_connect, DbConfig
+
 
 class Data(BaseModel):
     id: int
@@ -17,16 +17,16 @@ creds = DbConfig(
     log_queries=True
 )
 
-sql_connect(creds).query("TRUNCATE data RESTART IDENTITY").commit()
+sql_connect(creds).query("TRUNCATE data RESTART IDENTITY").run_query()
 
-sql_connect(creds).query("INSERT INTO data (key, value) values (%(key)s, %(value)s) RETURNING *").bind({'key':'k1', 'value':1}).get(Data)
+sql_connect(creds).query("INSERT INTO data (key, value) values (%(key)s, %(value)s) RETURNING *").bind({'key':'k1', 'value':1}).run_query(Data)
 data = sql_connect(creds).query("SELECT * FROM data where id=%(id)s").bind({"id": 1}).get(Data)
 print(data)
 
-sql_connect(creds).query("INSERT INTO data (key, value) values (%(key)s, %(value)s) RETURNING *").bind({'key':'k2', 'value':2}).get(Data)
+sql_connect(creds).query("INSERT INTO data (key, value) values (%(key)s, %(value)s) RETURNING *").bind({'key':'k2', 'value':2}).run_query(Data)
 
 id_tuple = ((1,2,),)
-data = sql_connect(creds).query("SELECT * FROM data where id in %s").bind(id_tuple).get_list(Data)
+data = sql_connect(creds).query("SELECT * FROM data where id in %s").bind(id_tuple).run_query(Data, as_list=True)
 print(data)
 
 
