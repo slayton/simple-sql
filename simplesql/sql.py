@@ -6,8 +6,8 @@ from psycopg2.extras import RealDictCursor, DictCursor
 
 from pydantic import BaseModel, TypeAdapter
 
-_primitive_types = [int, float, str, bool]
-_accepted_types = Union[int, float, str, bool, BaseModel]
+_primitive_types = {int, float, str, bool}
+_accepted_types = Union[int, float, str, bool, type, BaseModel]
 _return_types = Union[
     None,
     int,
@@ -33,7 +33,7 @@ class DbConfig(BaseModel):
 
 
 def _parse_result(cursor, result_type: _accepted_types, as_list: bool) -> _return_types:
-    if isinstance(result_type, type):
+    if result_type in _primitive_types:
         return _parse_primitive(cursor, result_type, as_list)
     else:
         return _parse_pydantic(cursor, result_type, as_list)
