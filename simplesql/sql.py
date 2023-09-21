@@ -1,3 +1,5 @@
+import types
+import typing
 from enum import IntEnum
 from typing import Type, List, Union
 
@@ -30,14 +32,6 @@ class DbConfig(BaseModel):
     username: str
     password: str
     log_queries: bool = False
-
-
-def _parse_result(cursor, result_type: _accepted_types, as_list: bool) -> _return_types:
-    if result_type in _primitive_types:
-        return _parse_primitive(cursor, result_type, as_list)
-    else:
-        return _parse_pydantic(cursor, result_type, as_list)
-
 
 def _parse_primitive(cursor, expected_type: type, as_list: bool) -> _return_types:
 
@@ -82,16 +76,23 @@ class SQL:
             self.args = args
         return self
 
-    def run_query(
-        self, model_type: _accepted_types = None, as_list: bool = False
-    ) -> _return_types:
-        cf = DictCursor if model_type in _primitive_types else RealDictCursor
+    def run_query(self, model_type: _accepted_types = None) -> _return_types:
+
+        as_list = isinstance(model_type, types.GenericAlias)
+        parse_type = typing.get_args(model_type)[0] if as_list else model_type
+        is_primitive = parse_type in _primitive_types
+
+        cf = DictCursor if is_primitive else RealDictCursor
+
         with self.connection.cursor(cursor_factory=cf) as cursor:
             cursor.execute(self.query_string, self.args)
             self.connection.commit()
             if model_type is None:
                 return
-            return _parse_result(cursor, model_type, as_list)
+            if is_primitive:
+                return _parse_primitive(cursor, parse_type, as_list)
+            else:
+                return _parse_pydantic(cursor, parse_type, as_list)
 
 
 def sql_connect(credentials: DbConfig) -> SQL:
