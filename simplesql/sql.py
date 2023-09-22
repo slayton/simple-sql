@@ -33,6 +33,17 @@ class DbConfig(BaseModel):
     password: str
     log_queries: bool = False
 
+
+def _parse_result(cursor, result_type: _accepted_types) -> _return_types:
+    as_list = isinstance(result_type, types.GenericAlias)
+    parse_type = typing.get_args(result_type)[0] if as_list else result_type
+
+    if parse_type in _primitive_types:
+        return _parse_primitive(cursor, parse_type, as_list)
+    else:
+        return _parse_pydantic(cursor, parse_type, as_list)
+
+
 def _parse_primitive(cursor, expected_type: type, as_list: bool) -> _return_types:
 
     if as_list:
