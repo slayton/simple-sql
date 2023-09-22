@@ -8,7 +8,7 @@ setup(
     author_email='stuart@stuartlayton.com',
     packages=find_packages(),
     install_requires=[
-        'psycopg2'
+        'psycopg2',
         'pydantic'
     ]
 )
