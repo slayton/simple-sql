@@ -26,7 +26,7 @@ print(data)
 sql_connect(creds).query("INSERT INTO data (key, value) values (%(key)s, %(value)s) RETURNING *").bind({'key':'k2', 'value':2}).run_query(Data)
 
 id_tuple = ((1,2,),)
-data = sql_connect(creds).query("SELECT * FROM data where id in %s").bind(id_tuple).run_query(Data, as_list=True)
+data = sql_connect(creds).query("SELECT * FROM data where id in %s").bind(id_tuple).run_query(list[Data])
 print(data)
 
 
