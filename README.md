@@ -15,14 +15,14 @@ instance of DbConfig and you have a Pydantic model you want to deserialize into:
 Query a single row by id:
 ```python
 SQL = connect(config)
-result = SQL.query("SELECT * FROM data where id=%(id)s").bind({"id": 2}).get_single(PydanticModel)
+result = SQL.query("SELECT * FROM data where id=%(id)s").bind({"id": 2}).run_query(PydanticModel)
 ```
 
 Query within a collection of ids:
 ```python
 id_tuple = ((1,2,3), )
 SQL = connect(config) #Creds is an instance of models. dbconfig
-result = SQL.query("SELECT * FROM data where id=%s").bind(id_tuple).get_list(PydanticModel) 
+result = SQL.query("SELECT * FROM data where id=%s").bind(id_tuple).run_query(list[PydanticModel]) 
 ```
 
 ## Transaction Support
