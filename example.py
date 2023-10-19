@@ -30,17 +30,3 @@ data = sql_connect(creds).query("SELECT * FROM data where id in %s").bind(id_tup
 print(data)
 
 
-# Select by ID
-# SQL = sql_connect(creds)
-# result =
-# print(result)
-#
-# # Select by ID in list of ids
-# id_tuple = ((1,2,),)
-# SQL = sql_connect(creds) #Creds is an instance of models. dbconfig
-# result = SQL.query("SELECT * FROM data where id in %s").bind(id_tuple).get_list(Data)
-# print(result)
-
-# Insert new row into database
-
-
