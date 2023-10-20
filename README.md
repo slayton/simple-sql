@@ -11,18 +11,39 @@ See `examples.py`
 
 These examples assume you have Postgres running somewhere. Connection information about that database is defined in an
 instance of DbConfig and you have a Pydantic model you want to deserialize into:
+```python
+# Example Pydantic Model
+class MyModel(BaseModel):
+    id: int
+    value: str
+```
+
+How to get an instance of `SQL`
+```python
+creds = DbConfig(
+    database="db",
+    username="username",
+    password="password",
+    hostname="localhost",
+)
+SQL = connect(creds)
+```
 
 ### Queries
-Query a single row by id:
+Query a single row by id using a `dict`:
 ```python
-SQL = connect(config)
 data = {"id": 2}
+result = SQL.query("SELECT * FROM data where id=%(id)s").bind(data).run_query(PydanticModel)
+```
+
+Query a single row by id using a `Pydantic` mode;:
+```python
+data = MyModel(id=1, value="Hello World")
 result = SQL.query("SELECT * FROM data where id=%(id)s").bind(data).run_query(PydanticModel)
 ```
 
 Query for a list of results
 ```python
-SQL = connect(config)
 data = {"id": 2}
 result = SQL.query("SELECT * FROM data where id>%(id)s").bind(data).run_query(list[PydanticModel])
 ```
@@ -30,8 +51,6 @@ result = SQL.query("SELECT * FROM data where id>%(id)s").bind(data).run_query(li
 Query within a collection of ids:
 ```python
 
-
-SQL = connect(config) #Creds is an instance of models. dbconfig
 data = {"ids": (1,2,3)}
 result = SQL.query("SELECT * FROM data where id=%(ids)s").bind(data).run_query(list[PydanticModel])
 ```
@@ -39,9 +58,6 @@ result = SQL.query("SELECT * FROM data where id=%(ids)s").bind(data).run_query(l
 ### Inserts & Updates
 
 ```python 
-class MyModel(BaseModel):
-    id: int
-    value: str
 
 data = MyModel(id=1, value="hello world")
 
