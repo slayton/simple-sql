@@ -6,6 +6,19 @@ returning results as a pydantic model.
 It requires the user to write raw sql (trust me this is a feature) and abstracts away a lot of the 
 boiler plate code you need with psycopg2.
 
+It supports python dictionaries as well as Pydantic objects natively.
+
+The basic template is user write their queries in native SQL as a string. Variables in the query use Psycopg2 syntax and
+are defined with `%(VARNAME)s`. Inputs to the query are specified by calling `bind` with either a python `dict` or an
+instance of Pydantic object.
+
+The query is executed by calling `run_query()`. Results from the query can be captured by providing a `type` in the `run_query`
+arguments. Accepted types are `int`, `float`, `str`, `bool` and types that extend `BaseModel`. Additionally collections can
+by returned by providing a `list[type]` as the argument to `run_query`.
+
+For example if you want to get a single `int` value you'd call `run_query(int)` whereas if you wanted a list of `int`s
+you call `run_query(list[int])`
+
 ## Examples:
 See `examples.py`
 
