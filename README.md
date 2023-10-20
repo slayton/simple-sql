@@ -26,6 +26,7 @@ These examples assume you have Postgres running somewhere. Connection informatio
 instance of DbConfig and you have a Pydantic model you want to deserialize into:
 ```python
 # Example Pydantic Model
+from pydantic import BaseModel
 class MyModel(BaseModel):
     id: int
     value: str
@@ -33,13 +34,14 @@ class MyModel(BaseModel):
 
 How to get an instance of `SQL`
 ```python
+from sql import sql_connect, DbConfig
 creds = DbConfig(
     database="db",
     username="username",
     password="password",
     hostname="localhost",
 )
-SQL = connect(creds)
+SQL = sql_connect(creds)
 ```
 
 ## Queries
@@ -79,7 +81,7 @@ data = {"ids": (1,2,3)}
 result = SQL.query("INSERT INTO data (id, value) VALUES (%(id)s, %(value)s)").bind(data).run_query() 
 
 new_data = MyModel(id=1, value="New Value")
-result = SQL.query("UPDATE data SET value=%(value)s WHERE id=%(id)s").bind(data).run_query()
+result = SQL.query("UPDATE data SET value=%(value)s WHERE id=%(id)s").bind(new_data).run_query()
 ```
 ## Transaction Support
 All queries are contained in their own transaction. Transactional support across multiple queries is a WIP
