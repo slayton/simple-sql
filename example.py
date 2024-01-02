@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from connect.transaction import connect, transaction
+from connect.transaction import set_credentials, Credentials
 from connect.postgres import BatchInsert, Query
 
 
@@ -10,8 +10,17 @@ class Data(BaseModel):
     value: int
 
 
+creds = Credentials(
+        user="user",
+        password="password",
+        host="localhost",
+        port=5432)
+
+set_credentials(creds)
+
+
 Query("INSERT INTO data (key, value) values (%(key)s, %(value)s) RETURNING *").bind({'key': 'k1', 'value':1}).exec(Data)
-data = Query(connect(creds), "SELECT * FROM data where id=%(id)s").bind({"id": 1}).exec(Data)
+data = Query("SELECT * FROM data where id=%(id)s").bind({"id": 1}).exec(Data)
 print(data)
 
 Query("INSERT INTO data (key, value) values (%(key)s, %(value)s) RETURNING *").bind({'key': 'k2', 'value':2}).exec(Data)

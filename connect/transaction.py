@@ -13,7 +13,7 @@ print("Connected to "+ os.getenv('DB_NAME'))
 connection_data = local()
 connection_data.connection = None
 connection_data.pool = None
-
+connection_data.credentials = None
 
 class Credentials(BaseModel):
     username: str
@@ -35,10 +35,7 @@ class ConnectionWrapper():
 
 
 def __build_connection_pool(creds: Credentials):
-    if connection_data.pool is not None:
-        return connection_data.pool
-    else:
-        connection_data.pool = psycopg2.pool.ThreadedConnectionPool(
+    return psycopg2.pool.ThreadedConnectionPool(
             minconn=creds.min_connections,
             maxconn=creds.max_connections,
             user=creds.username,
@@ -51,9 +48,13 @@ def __build_connection_pool(creds: Credentials):
         )
 
 
+def set_credentials(creds: Credentials):
+    connection_data.credentials = creds
+    connection_data.pool = __build_connection_pool(creds)
+
 def get_connection(credentials: Credentials):
     if connection_data.pool is None:
-        __build_connection_pool(credentials)
+        raise ValueError("Cannot create connections, please set credentials first")
     if connection_data.connection is not None:
         return ConnectionWrapper(connection_data.connection, is_transaction=True)
     return ConnectionWrapper(connection_data.pool.getconn(), is_transaction=False)
