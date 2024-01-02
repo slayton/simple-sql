@@ -3,3 +3,5 @@ psycopg2==2.9.7
 pydantic==2.3.0
 pydantic_core==2.6.3
 typing_extensions==4.7.1
+python-dotenv~=1.0.0
+setuptools~=62.6.0
