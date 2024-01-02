@@ -1,6 +1,6 @@
-# Connect Postgres Py
+# Simple SQL
 
-Connect Postgres Py is a thin wrapper around Psycopg2 that is meant to simplify the mechanisms for querying a database and 
+Simple SQL is a thin wrapper around Psycopg2 that is meant to simplify the mechanisms for querying a database and 
 returning results as a pydantic model. 
 
 It requires the user to write raw sql (trust me this is a feature) and abstracts away a lot of the 
