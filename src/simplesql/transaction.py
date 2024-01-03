@@ -1,14 +1,8 @@
 from contextlib import contextmanager
 import psycopg2.pool
-import os
-from dotenv import load_dotenv
 from pydantic import BaseModel
-
-load_dotenv()
 from threading import local
 
-
-print("Connected to "+ os.getenv('DB_NAME'))
 
 connection_data = local()
 connection_data.connection = None

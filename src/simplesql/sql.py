@@ -5,7 +5,7 @@ from typing import Union
 
 from psycopg2.extras import RealDictCursor, DictCursor, execute_batch
 from pydantic import BaseModel, TypeAdapter
-from transaction import get_connection
+from .transaction import get_connection
 
 _primitive_types = {int, float, str, bool}
 _accepted_types = Union[int, float, str, bool, type, BaseModel]
