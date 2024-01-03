@@ -106,6 +106,10 @@ class Query(BaseQuery):
         return self
 
 
+class Insert(Query):
+    pass
+
+
 class MultiRowQuery(BaseQuery):
     def _exec(self, cursor):
         cursor.execute(self.query_string, self.args)
