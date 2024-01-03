@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from simplesql.transaction import set_credentials, Credentials
+from simplesql import set_credentials, Credentials
 from simplesql.postgres import BatchInsert, Query
 
 

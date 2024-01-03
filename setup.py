@@ -5,8 +5,9 @@ setup(
     version='1.0',
     url='https://github.com/slayton/simple-sql',
     author='slayton',
-    author_email='stuart.layton@gmail.com.com',
-    packages=find_packages(),
+    author_email='stuart.layton@gmail.com',
+    packages=find_packages("src"),
+    package_dir={"": "src"},
     install_requires=[
         'psycopg2',
         'pydantic'
